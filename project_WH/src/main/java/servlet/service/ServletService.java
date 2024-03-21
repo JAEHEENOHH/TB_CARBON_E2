@@ -8,4 +8,9 @@ public interface ServletService {
 	String addStringTest(String str) throws Exception;
 
 	List<ServletVO> list();
+
+	List<ServletVO> list1();
+
+	List<ServletVO> list2(String loc1);
+
 }

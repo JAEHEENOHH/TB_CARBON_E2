@@ -27,4 +27,15 @@ public class ServletImpl extends EgovAbstractServiceImpl implements ServletServi
 	public List<ServletVO> list() {
 		return dao.list();
 	}
+
+	@Override
+	public List<ServletVO> list1() {
+		return dao.list1();
+	}
+
+
+	@Override
+	public List<ServletVO> list2(String loc1) {
+		return dao.list2(loc1);
+	}
 }

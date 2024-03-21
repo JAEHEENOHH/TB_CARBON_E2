@@ -14,6 +14,14 @@
 	</select>
 	
 	<select id="sidonm" resultType="ServletVO">
-	select distinct sidonm from taf
+	SELECT DISTINCT sidonm FROM public."TB_CARBON_E2"
+	</select>
+	
+	<select id="sgg_nm" resultType="ServletVO" parameterType="String">
+	SELECT DISTINCT sgg_nm FROM public."tl_sgg" WHERE sd_nm = #{loc1}
+	</select>
+	
+	<select id="bjd_nm" resultType="ServletVO">
+	SELECT DISTINCT bjd_nm FROM public."tl_bjd"
 	</select>
 </mapper>
