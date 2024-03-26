@@ -2,26 +2,29 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="servlet">
 
-	<select id="serVletTest" resultType="EgovMap">
-		<![CDATA[
-			SELECT 
-				FILENAME, FILEREALNAME
-			FROM
-				UPLOAD
-			WHERE
-				1=1
-		]]>
-	</select>
-	
-	<select id="sidonm" resultType="ServletVO">
-	SELECT DISTINCT sidonm FROM public."TB_CARBON_E2"
-	</select>
-	
-	<select id="sgg_nm" resultType="ServletVO" parameterType="String">
-	SELECT DISTINCT sgg_nm FROM public."tl_sgg" WHERE sd_nm = #{loc1}
-	</select>
-	
-	<select id="bjd_nm" resultType="ServletVO">
-	SELECT DISTINCT bjd_nm FROM public."tl_bjd"
-	</select>
+   <select id="serVletTest" resultType="EgovMap">
+      <![CDATA[
+         SELECT FILENAME, FILEREALNAME
+         FROM UPLOAD
+         WHERE 1=1
+      ]]>
+   </select>
+
+   <select id="sidonm" resultType="Map">
+      SELECT DISTINCT sd_nm, sd_cd FROM
+      public."tl_sd";
+   </select>
+
+   <select id="sggnm" resultType="map" parameterType="String">
+      SELECT REPLACE(sgg_nm, CONCAT(sd_nm, ' '), '') AS sgg_nm, sgg_cd
+      FROM tl_sgg WHERE sgg_nm LIKE CONCAT(#{sido}, '%')
+   </select>
+
+
+   <select id="bjdnm" resultType="Map" parameterType="String">
+      SELECT DISTINCT b.bjd_nm, b.bjd_cd
+      FROM tl_bjd b
+      JOIN tl_sgg c ON b.sgg_cd = c.sgg_cd
+      WHERE c.sgg_cd = #{sgg}
+   </select>
 </mapper>

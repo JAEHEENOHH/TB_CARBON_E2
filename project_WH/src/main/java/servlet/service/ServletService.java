@@ -1,16 +1,16 @@
 package servlet.service;
 
 import java.util.List;
-
-import servlet.VO.ServletVO;
+import java.util.Map;
 
 public interface ServletService {
 	String addStringTest(String str) throws Exception;
+	
+	List<Map<String, Object>> list();
 
-	List<ServletVO> list();
+	List<Map<String, Object>> sgglist(String sido);
 
-	List<ServletVO> list1();
+	List<Map<String, Object>> bjdlist(String sgg);
 
-	List<ServletVO> list2(String loc1);
 
 }

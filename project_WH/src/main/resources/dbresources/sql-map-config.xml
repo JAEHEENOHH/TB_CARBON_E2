@@ -10,5 +10,7 @@
 		<typeAlias alias="list1" type="java.util.List"/>
 		<typeAlias alias="list2" type="java.util.List"/>
 		<typeAlias alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+		<typeAlias alias="selectSd" type="servlet.VO.SdDTO"/>
+		<typeAlias alias="selectSgg" type="servlet.VO.SggDTO"/>
 	</typeAliases>
 </configuration>
