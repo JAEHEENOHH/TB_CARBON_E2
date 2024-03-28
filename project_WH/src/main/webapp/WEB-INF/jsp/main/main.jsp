@@ -23,6 +23,65 @@
    var bjdLayer;
 
    $(document).ready(function() {
+	   
+	   $("#fileBtn").on("click",function() {
+			let fileName = $('#file').val();
+			alert("!111 " + fileName);
+			if (fileName == "") {
+				alert("파일을 선택해주세요.");
+				return false;
+			}
+			let dotName = fileName.substring(fileName.lastIndexOf('.') + 1)
+					.toLowerCase();
+			if (dotName == 'txt') {
+				//alert("! " + fileName);
+
+				$.ajax({
+					url : '/fileUp2.do',
+					type : 'POST',
+					dataType : 'json',
+					data : new FormData($('#form')[0]),
+					cache : false,
+					contentType : false,
+					processData : false,
+					enctype : 'multipart/form-data',
+					// 추가한부분
+					xhr : function() {
+						var xhr = $.ajaxSettings.xhr();
+						xhr.upload.onprogress = function(e) {
+							var per = e.loaded * 100 / e.total;
+							progressBar(per);
+						};
+						return xhr;
+					},
+
+					/* swal창으로하기
+					 xhr: function(){
+					   var xhr = $.ajaxSettings.xhr();
+					   // Set the onprogress event controlle
+					    xhr.upload.onprogress = function(event){
+					      var perc = Math.round((event.loaded / event.total) * 100);
+					      $('#progressBar').text(perc + '%');
+					      $('#progressBar').css('width',perc + '%');
+					      };
+					      return xhr;
+					   },
+					 */
+
+					success : function(result) {
+						//alert(result);
+						console.log("SUCCESS : ", result);
+					},
+					error : function(Data) {
+						console.log("ERROR : ", Data);
+					}
+				});
+
+			} else {
+				alert("확장자가 안 맞으면 멈추기");
+			}
+		});
+	   
                   $('#sidoSelect').change(function() {
                                  var sidoSelectedValue = $(this).val();
                                  var sidoSelectedText = $(this).find('option:selected').text();
@@ -66,7 +125,7 @@
                                  // bjdSelect의 선택 해제
                                  //bjdSelect.val(null).trigger('change');
                                  //bjdSelect.html("<option>--동/읍/면를 선택하세요--</option>");
-								alert(sidoSelectedValue);
+								//alert(sidoSelectedValue);
 								console.log(sidoSelectedText);
                   
 				               // AJAX 요청 보내기
@@ -78,18 +137,24 @@
 				                     success: function(response) {
 				                          // 성공 시 수행할 작업
 				                          var sgg = JSON.parse(response); // 제이슨 형식으로 파싱
-
+											console.log(sgg);
 				                          var sggSelect = $("#sggSelect");
 				                          sggSelect.html("<option>--시/군/구를 선택하세요--</option>");
 				                          //var lists = JSON.parse(response);
 				                          for(var i = 0; i < response.length; i++) {
 				                              var item = sgg[i];
-				                              sggSelect.append("<option value='" + item.sgg_cd + "'>" + item.sgg_nm + "</option>");
+				                              
+				                              
+				                              let indexOfSpace = item.sgg_nm.indexOf(' ');
+				                              let sgg2 = indexOfSpace !== -1 ? item.sgg_nm.substring(indexOfSpace + 1) : item.sgg_nm;
+				                                    console.log(sgg2);
+				                              
+				                              sggSelect.append("<option value='" + item.sgg_nm + "'>" + sgg2 + "</option>");
 				                                }
 				                           },
 				                          error: function(xhr, status, error) {
 				                              // 에러 발생 시 수행할 작업
-				                                alert('ajax 실패');
+				                               // alert('ajax 실패');
 				                              // console.error("AJAX 요청 실패:", error);
 				                          }
 				                     });
@@ -105,7 +170,8 @@
                                  
                                   $('#bjdSelect').empty().val(null).trigger('change');
                                  
-                                 var cqlFilterSGG = "sgg_cd='" + sggSelectedValue + "'";
+                              //	alert(sggSelectedValue);
+                                 var cqlFilterSGG = "sgg_nm LIKE'%" + sggSelectedValue + "%'";
                                  
                                  if(sggLayer || bjdLayer) {
                                     
@@ -143,7 +209,7 @@
                                           }, // 선택된 값 전송
                                           dataType : 'text',
                                           success : function(response) {
-                                             alert(response);
+                                             //alert(response);
 
                                              var bjd = JSON.parse(response);
 
@@ -156,7 +222,7 @@
                                           },
                                           error : function(xhr,status, error) {
                                              // 에러 발생 시 수행할 작업
-                                             alert('ajax 실패 sgg');
+                                             //alert('ajax 실패 sgg');
                                              // console.error("AJAX 요청 실패:", error);
                                           }
                                        });
@@ -224,6 +290,7 @@
                         });
 
                });
+
 </script>
 <style type="text/css">
 .toolBar {
@@ -265,45 +332,44 @@
 <body>
    <div>
       <div class="toolBar">
-
          <h1>메뉴</h1>
-         
          <div class="selectBar">
             <select id="sidoSelect">
                <option>--시/도를 선택하세요--</option>
-               <c:forEach items="${sdlist }" var="sido">
-                  <option value="${sido.sd_cd }">${sido.sd_nm }</option>
+               <c:forEach items="${sdlist}" var="sido">
+                  <option value="${sido.sd_cd}">${sido.sd_nm}</option>
                </c:forEach>
             </select>
          </div>
-         
          <div class="selectBar">
             <select id="sggSelect">
                <option>--시/군/구를 선택하세요--</option>
             </select>
          </div>
-
          <div class="selectBar">
             <select id="bjdSelect">
                <option>--동/읍/면을 선택하세요--</option>
             </select>
+            
+          <div>
+                        <form id="form" enctype="multipart/form-data">
+                        <input type="file" id="file" name="file" accept="txt">
+                     </form>
+                        <button type="button" id="fileBtn">파일 전송</button><hr>              
+             </div>
          </div>
-         
       </div>
+
       <div>
-      <div id="address" class="address">
-      <h1>주소창</h1>
+         <div id="address" class="address">
+            <h1>주소창</h1>
+         </div>
+         <div id="map" class="map">
+         </div>
       </div>
-      <div id="map" class="map">
-      </div>
-      </div>
-      
    </div>
-   
    <div class="footer">
-   
       <h3>탄소배출량 표기 시스템</h3>
-      
    </div>
 </body>
 </html>

@@ -11,7 +11,7 @@ import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import egovframework.rte.psl.dataaccess.util.EgovMap;
 import servlet.service.ServletService; 
 
-@Service("ServletService")
+@Service("servletService")
 public class ServletImpl extends EgovAbstractServiceImpl implements ServletService{
 	
 	@Resource(name="ServletDAO")
@@ -37,6 +37,11 @@ public class ServletImpl extends EgovAbstractServiceImpl implements ServletServi
 	public List<Map<String, Object>> bjdlist(String sgg) {
 		return dao.selectListbjd(sgg);
 	}
+
+	@Override
+	   public void uploadFile(List<Map<String, Object>> list) {
+	         dao.uploadFile(list);
+	   }
 
 
 }

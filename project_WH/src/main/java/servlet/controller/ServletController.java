@@ -16,7 +16,7 @@ import servlet.service.ServletService;
 
 @Controller
 public class ServletController {
-	   @Resource(name = "ServletService")
+	   @Resource(name = "servletService")
 	   private ServletService servletService;
    
    @RequestMapping(value = "/main.do", method = RequestMethod.GET)

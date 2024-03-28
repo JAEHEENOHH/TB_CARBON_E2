@@ -16,7 +16,7 @@
    </select>
 
    <select id="sggnm" resultType="map" parameterType="String">
-      SELECT REPLACE(sgg_nm, CONCAT(sd_nm, ' '), '') AS sgg_nm, sgg_cd
+      SELECT sgg_nm, sgg_cd
       FROM tl_sgg WHERE sgg_nm LIKE CONCAT(#{sido}, '%')
    </select>
 
@@ -25,6 +25,15 @@
       SELECT DISTINCT b.bjd_nm, b.bjd_cd
       FROM tl_bjd b
       JOIN tl_sgg c ON b.sgg_cd = c.sgg_cd
-      WHERE c.sgg_cd = #{sgg}
+      WHERE c.sgg_nm = #{sgg}
    </select>
+   
+   
+   <insert id="fileUp" parameterType="list">
+        <foreach collection="list" item="item" index="index" separator=";">
+        INSERT INTO nono (yearMonthUse, landLocation, roadLandLocation, sggcd, sidonm, landCode, bun, landclassification, newAddNumber, newRoadCode, newLandCode, usage)  
+        VALUES (#{item.sggcd}, #{item.sidonm}, #{item.usage})
+      </foreach>
+   </insert>
+   
 </mapper>
