@@ -1,5 +1,6 @@
 package servlet.controller;
 
+import java.util.HashMap; 
 import java.util.List;
 import java.util.Map;
 
@@ -7,11 +8,13 @@ import javax.annotation.Resource;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import servlet.VO.SggDTO;
 import servlet.service.ServletService;
 
 @Controller
@@ -37,10 +40,18 @@ public class ServletController {
    
    @ResponseBody
    @RequestMapping(value = "/sgg.do", method = RequestMethod.POST)
-   public  List<Map<String, Object>> sggTest(@RequestParam(name="sido", required = false, defaultValue = "" ) String sido) {
-      List<Map<String, Object>> sgglist = servletService.sgglist(sido);
+   public Map<String, Object> sggTest(@RequestParam(name="sido", required = false, defaultValue = "" ) String sido) {
+    
+	  List<Map<String, Object>> sgglist = servletService.sgglist(sido);
+      
+      Map<String, Object> geom = servletService.selectGeom(sido);
+      
+      Map<String,Object> map = new HashMap<String, Object>();
+      map.put("sgglist", sgglist);
+      map.put("geom", geom);
+      
       System.out.println(sido);
-      return sgglist;
+      return map;
    }
    
    @RequestMapping(value = "/bjd.do", method = RequestMethod.POST)
@@ -53,5 +64,29 @@ public class ServletController {
       System.out.println(bjdlist);
       return bjdlist;
    }
+   
+	
+	@PostMapping("/selectSgg.do")
+	public Map<String, Object> selectSgg(@RequestParam("test") String name) {
+		List<SggDTO> list = servletService.selectSgg(name);
+	    
+		Map<String, Object> geom = servletService.selectGeom(name);
+	     
+	    Map<String,Object> map = new HashMap<String, Object>();
+	      
+	      map.put("list", list);
+	      map.put("geom", geom);
+	      
+	      System.out.println(map);
+	      
+	      return map;
+	   }
+	@PostMapping( "/selectB.do")
+	public Map<String, Object> selectB(@RequestParam("test") String name) {
+		Map<String, Object> geom = servletService.selectB(name);
+	      
+	      return geom;
+	   }
+	
    
 }

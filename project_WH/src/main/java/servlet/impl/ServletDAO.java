@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import egovframework.rte.psl.dataaccess.util.EgovMap;
+import servlet.VO.SggDTO;
 
 @Repository("ServletDAO")
 public class ServletDAO extends EgovComAbstractDAO {
@@ -37,6 +38,20 @@ public class ServletDAO extends EgovComAbstractDAO {
 	      System.out.println(list);
 	      session.insert("servlet.fileUp", list);
 	   }
+
+	public List<SggDTO> selectSgg(String name) {
+		return  session.selectOne("servlet.selectSgg", name);
+	}
+
+	public Map<String, Object> selectGeom(String sido) {
+		return session.selectOne("servlet.selectGeom", sido);
+	}
+
+	public Map<String, Object> selectB(String name) {
+		return session.selectOne("servlet.selectB", name);
+	}
+	
+	
 	
 
 }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import egovframework.rte.psl.dataaccess.util.EgovMap;
+import servlet.VO.SggDTO;
 import servlet.service.ServletService; 
 
 @Service("servletService")
@@ -43,5 +44,19 @@ public class ServletImpl extends EgovAbstractServiceImpl implements ServletServi
 	         dao.uploadFile(list);
 	   }
 
+	@Override
+	public List<SggDTO> selectSgg(String name) {
+		return dao.selectSgg(name);
+	}
+
+	@Override
+	public Map<String, Object> selectGeom(String sido) {
+		return dao.selectGeom(sido);
+	}
+
+	@Override
+	public Map<String, Object> selectB(String name) {
+		return dao.selectB(name);
+	}
 
 }

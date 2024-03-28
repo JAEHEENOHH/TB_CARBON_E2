@@ -80,11 +80,14 @@
 			} else {
 				alert("확장자가 안 맞으면 멈추기");
 			}
-		});
+		}); 
+	   
+	   
 	   
                   $('#sidoSelect').change(function() {
                                  var sidoSelectedValue = $(this).val();
                                  var sidoSelectedText = $(this).find('option:selected').text();
+                                 
                                  updateAddress(sidoSelectedText, null, null); // 상단 시/도 노출
                                  
                                  var cqlFilterSD = "sd_cd='" + sidoSelectedValue + "'";
@@ -133,25 +136,35 @@
 				                   type: 'POST', // 또는 "GET", 요청 방식 선택
 				                       url: '/sgg.do', // 컨트롤러의 URL 입력
 				                       data: { 'sido': sidoSelectedText }, // 선택된 값 전송
-				                       dataType: 'text',
+				                       dataType: 'json',
 				                     success: function(response) {
 				                          // 성공 시 수행할 작업
-				                          var sgg = JSON.parse(response); // 제이슨 형식으로 파싱
-											console.log(sgg);
+				                          //console.log(response);
+				                         // console.log(response.sgglist);
+				                          
+				                          var sgg = response.sgglist;
+				                          var geom = response.geom;
+				                          map.getView().fit([geom.xmin, geom.ymin, geom.xmax, geom.ymax], {duation : 900});  
+				                       
+				                         
+											//console.log(sgg);
+				                         
 				                          var sggSelect = $("#sggSelect");
 				                          sggSelect.html("<option>--시/군/구를 선택하세요--</option>");
 				                          //var lists = JSON.parse(response);
-				                          for(var i = 0; i < response.length; i++) {
-				                              var item = sgg[i];
-				                              
-				                              
+				                         // for(var i = 0; i < sgg.length; i++) {
+				                        	 $.each(sgg, function(index, item){
+				                       			
+				                        	  alert("for문으로 진입");
+				                              //var item = sgg[i];
+				                              console.log("for문안으로 진입"+item.sgg_nm);                          
 				                              let indexOfSpace = item.sgg_nm.indexOf(' ');
 				                              let sgg2 = indexOfSpace !== -1 ? item.sgg_nm.substring(indexOfSpace + 1) : item.sgg_nm;
 				                                    console.log(sgg2);
 				                              
 				                              sggSelect.append("<option value='" + item.sgg_nm + "'>" + sgg2 + "</option>");
-				                                }
-				                           },
+				                                })
+				                         },
 				                          error: function(xhr, status, error) {
 				                              // 에러 발생 시 수행할 작업
 				                               // alert('ajax 실패');
@@ -331,7 +344,7 @@
 </head>
 <body>
    <div>
-      <div class="toolBar">
+		<div class="toolBar">
          <h1>메뉴</h1>
          <div class="selectBar">
             <select id="sidoSelect">
@@ -352,13 +365,13 @@
             </select>
             
           <div>
-                        <form id="form" enctype="multipart/form-data">
-                        <input type="file" id="file" name="file" accept="txt">
-                     </form>
+          <form id="form" enctype="multipart/form-data">
+			<input type="file" id="file" name="file" accept="txt">
+          </form>
                         <button type="button" id="fileBtn">파일 전송</button><hr>              
-             </div>
-         </div>
-      </div>
+            	 </div>
+	        </div>
+		</div>
 
       <div>
          <div id="address" class="address">
