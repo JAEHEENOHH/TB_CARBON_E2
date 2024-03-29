@@ -30,11 +30,19 @@
       
    
    <insert id="fileUp" parameterType="list">
-        <foreach collection="list" item="item" index="index" separator=";">
+      <foreach collection="list" item="item" index="index" separator=";">
         INSERT INTO nono (yearMonthUse, landLocation, roadLandLocation, sggcd, sidonm, landCode, bun, landclassification, newAddNumber, newRoadCode, newLandCode, usage)  
         VALUES (#{item.sggcd}, #{item.sidonm}, #{item.usage})
       </foreach>
    </insert>
+   
+      <select id="selectSd" parameterType="String" resultType="Map">
+    select (select ST_XMax(geom) as xmax FROM tl_sgg WHERE sgg_nm = #{name}::varchar order by xmax desc limit 1)
+      ,(select ST_YMax(geom) as ymax FROM tl_sgg WHERE  sgg_nm = #{name}::varchar order by ymax desc limit 1)
+      ,(select  ST_XMin(geom) as xmin FROM tl_sgg WHERE  sgg_nm = #{name}::varchar order by xmin  limit 1)
+      ,(select ST_YMin(geom) as ymin FROM tl_sgg WHERE  sgg_nm = #{name}::varchar order by ymin limit 1)
+          from tl_sd limit 1
+   </select>
    
          <select id="selectGeom" parameterType="String" resultType="Map">
       select (select ST_XMax(geom) as xmax FROM tl_sd WHERE sd_nm = #{sido}::varchar order by xmax desc limit 1)
@@ -45,19 +53,13 @@
    </select>
    
    <select id="selectB" parameterType="String" resultType="Map">
-    select (select ST_XMax(geom) as xmax FROM tl_sgg WHERE sgg_nm = #{name}::varchar order by xmax desc limit 1)
-      ,(select ST_YMax(geom) as ymax FROM tl_sgg WHERE  sgg_nm = #{name}::varchar order by ymax desc limit 1)
-      ,(select  ST_XMin(geom) as xmin FROM tl_sgg WHERE  sgg_nm = #{name}::varchar order by xmin  limit 1)
-      ,(select ST_YMin(geom) as ymin FROM tl_sgg WHERE  sgg_nm = #{name}::varchar order by ymin limit 1)
+    select (select ST_XMax(geom) as xmax FROM tl_sgg WHERE sgg_nm = #{sgg}::varchar order by xmax desc limit 1)
+      ,(select ST_YMax(geom) as ymax FROM tl_sgg WHERE  sgg_nm = #{sgg}::varchar order by ymax desc limit 1)
+      ,(select  ST_XMin(geom) as xmin FROM tl_sgg WHERE  sgg_nm = #{sgg}::varchar order by xmin  limit 1)
+      ,(select ST_YMin(geom) as ymin FROM tl_sgg WHERE  sgg_nm = #{sgg}::varchar order by ymin limit 1)
           from tl_sd limit 1
    </select>
    
-   <select id="selectSd" parameterType="String" resultType="Map">
-    select (select ST_XMax(geom) as xmax FROM tl_sgg WHERE sgg_nm = #{name}::varchar order by xmax desc limit 1)
-      ,(select ST_YMax(geom) as ymax FROM tl_sgg WHERE  sgg_nm = #{name}::varchar order by ymax desc limit 1)
-      ,(select  ST_XMin(geom) as xmin FROM tl_sgg WHERE  sgg_nm = #{name}::varchar order by xmin  limit 1)
-      ,(select ST_YMin(geom) as ymin FROM tl_sgg WHERE  sgg_nm = #{name}::varchar order by ymin limit 1)
-          from tl_sd limit 1
-   </select>
+
    
 </mapper>

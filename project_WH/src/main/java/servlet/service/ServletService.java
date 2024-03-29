@@ -20,7 +20,7 @@ public interface ServletService {
 
 	Map<String, Object> selectGeom(String sido);
 
-	Map<String, Object> selectB(String name);
+	Map<String, Object> selectB(String sgg);
 
 	
 }

@@ -47,8 +47,8 @@ public class ServletDAO extends EgovComAbstractDAO {
 		return session.selectOne("servlet.selectGeom", sido);
 	}
 
-	public Map<String, Object> selectB(String name) {
-		return session.selectOne("servlet.selectB", name);
+	public Map<String, Object> selectB(String sgg) {
+		return session.selectOne("servlet.selectB", sgg);
 	}
 	
 	

@@ -16,6 +16,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v6.15.1/build/ol.js"></script>
 <link rel="stylesheet"  href="https://cdn.jsdelivr.net/npm/ol@v6.15.1/ol.css">
+
 <script type="text/javascript">
    
    var sdLayer;
@@ -91,7 +92,8 @@
                                  updateAddress(sidoSelectedText, null, null); // 상단 시/도 노출
                                  
                                  var cqlFilterSD = "sd_cd='" + sidoSelectedValue + "'";
-                                 
+                                 var cqlFilterSgg = "sd_nm='" + sidoSelectedText + "'";
+                                
                                  if(sdLayer || sggLayer || bjdLayer) {
                                     map.removeLayer(sdLayer);
                                     map.removeLayer(sggLayer);
@@ -106,7 +108,7 @@
                                                    params : {
                                                       'VERSION' : '1.1.0', // 2. 버전
                                                       'LAYERS' : 'cite:tlsd', // 3. 작업공간:레이어 명
-                                                      'CQL_FILTER': cqlFilterSD,
+                                                      'CQL_FILTER': cqlFilterSD,      
                                                       'BBOX' : [
                                                             1.3871489341071218E7,
                                                             3910407.083927817,
@@ -121,6 +123,29 @@
                                  map.addLayer(sdLayer); // 맵 객체에 레이어를 추가
                                  
                                  
+                                 sggLayer = new ol.layer.Tile(
+                                         { // sgg 시군구
+                                            source : new ol.source.TileWMS(
+                                                  {
+                                                     url : 'http://localhost:8080/geoserver/cite/wms?service=WMS', // 1. 레이어 URL
+                                                     params : {
+                                                        'VERSION' : '1.1.0', // 2. 버전
+                                                        'LAYERS' : 'cite:tlsgg', // 3. 작업공간:레이어 명
+                                                        'CQL_FILTER': cqlFilterSgg,
+                                                        'style' : 'line',
+                                                        'BBOX' : [ 1.386872E7,
+                                                              3906626.5,
+                                                              1.4428071E7,
+                                                              4670269.5 ],
+                                                        'SRS' : 'EPSG:3857', // SRID
+                                                        'FORMAT' : 'image/png' // 포맷
+                                                     },
+                                                     serverType : 'geoserver',
+                                                  })
+                                         });
+
+                                   map.addLayer(sggLayer); // 맵 객체에 레이어를 추가함
+                                   
                                 $('#sggSelect, #bjdSelect').empty().val(null).trigger('change');
                                  // bjdSelect를 초기화
                                  //var bjdSelect = $("#bjdSelect");
@@ -146,8 +171,7 @@
 				                          var geom = response.geom;
 				                          map.getView().fit([geom.xmin, geom.ymin, geom.xmax, geom.ymax], {duation : 900});  
 				                       
-				                         
-											//console.log(sgg);
+				                      
 				                         
 				                          var sggSelect = $("#sggSelect");
 				                          sggSelect.html("<option>--시/군/구를 선택하세요--</option>");
@@ -155,7 +179,7 @@
 				                         // for(var i = 0; i < sgg.length; i++) {
 				                        	 $.each(sgg, function(index, item){
 				                       			
-				                        	  alert("for문으로 진입");
+				                        	 /*  alert("for문으로 진입"); */
 				                              //var item = sgg[i];
 				                              console.log("for문안으로 진입"+item.sgg_nm);                          
 				                              let indexOfSpace = item.sgg_nm.indexOf(' ');
@@ -174,7 +198,8 @@
 				                  });
 
                   $('#sggSelect').change(function() {
-                                 var sggSelectedValue = $(this).val();
+                                
+                	  var sggSelectedValue = $(this).val(); // sggSelect.append("<option value='" + item.sgg_nm + "'>" + sgg2 + "</option>");의 value 값을 sggSelectedValue에 담는다
                         
                                  if(sggSelectedValue) {
                                     var sggSelectedText = $(this).find('option:selected').text();
@@ -188,7 +213,7 @@
                                  
                                  if(sggLayer || bjdLayer) {
                                     
-                                    map.removeLayer(sggLayer);
+                                   map.removeLayer(sggLayer);
                                     map.removeLayer(bjdLayer);
                                  }
                                  
@@ -220,18 +245,25 @@
                                           data : {
                                              "sgg" : sggSelectedValue
                                           }, // 선택된 값 전송
-                                          dataType : 'text',
-                                          success : function(response) {
+                                          dataType : 'json',
+                                          success : function(response) { //controller에서 return map이 response(변수명)랑 같은 거임
                                              //alert(response);
-
-                                             var bjd = JSON.parse(response);
-
+  											console.log(response.bjdlist);
+                                             //var bjd = JSON.parse(response);
+                                           
+                                             var bjd = response.bjdlist;
+                                             var geom = response.geom;
+                                              
+                                              map.getView().fit([geom.xmin, geom.ymin, geom.xmax, geom.ymax], { duration: 900 });
+                                   				//alert(geom);
                                              var bjdSelect = $("#bjdSelect");
                                              bjdSelect.html("<option>--동/읍/면를 선택하세요--</option>");
-                                             for (var i = 0; i < bjd.length; i++) {
-                                                var item = bjd[i];
+                                             //for (var i = 0; i < bjd.length; i++) {
+                                            	  $.each(bjd, function(index, item){
+                                               // var item = bjd[i];
+                                                 console.log("for문안으로 진입"+item.bjd_nm); 
                                                 bjdSelect.append("<option value='" + item.bjd_cd + "'>"+ item.bjd_nm+ "</option>");
-                                             }
+                                             });
                                           },
                                           error : function(xhr,status, error) {
                                              // 에러 발생 시 수행할 작업
@@ -240,6 +272,7 @@
                                           }
                                        });
                               });
+                  
                   $('#bjdSelect').change(function() {
                      var bjdSelectedValue = $(this).val();
                      var bjdSelectedText = $(this).find('option:selected').text();
@@ -272,8 +305,10 @@
                            });
 
                      map.addLayer(bjdLayer); // 맵 객체에 레이어를 추가함
+  
                      
                   });
+           
                   
                   function updateAddress(sido, sgg, bjd) {
                      // 각 select 요소에서 선택된 값 가져오기
@@ -374,13 +409,13 @@
 		</div>
 
       <div>
-         <div id="address" class="address">
+        <div id="address" class="address">
             <h1>주소창</h1>
-         </div>
-         <div id="map" class="map">
-         </div>
-      </div>
-   </div>
+        </div>
+       <div id="map" class="map">
+       </div>
+     	</div>
+   	</div>
    <div class="footer">
       <h3>탄소배출량 표기 시스템</h3>
    </div>

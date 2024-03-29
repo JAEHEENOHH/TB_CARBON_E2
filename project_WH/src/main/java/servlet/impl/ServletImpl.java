@@ -55,8 +55,8 @@ public class ServletImpl extends EgovAbstractServiceImpl implements ServletServi
 	}
 
 	@Override
-	public Map<String, Object> selectB(String name) {
-		return dao.selectB(name);
+	public Map<String, Object> selectB(String sgg) {
+		return dao.selectB(sgg);
 	}
 
 }

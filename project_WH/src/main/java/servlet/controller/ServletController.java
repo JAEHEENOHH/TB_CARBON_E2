@@ -1,4 +1,4 @@
-package servlet.controller;
+package servlet.controller; 
 
 import java.util.HashMap; 
 import java.util.List;
@@ -8,6 +8,7 @@ import javax.annotation.Resource;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -55,38 +56,52 @@ public class ServletController {
    }
    
    @RequestMapping(value = "/bjd.do", method = RequestMethod.POST)
-   public @ResponseBody List<Map<String, Object>> bjdTest(@RequestParam(name="sgg", required = false, defaultValue = "" ) String sgg) {
+   public @ResponseBody Map<String, Object> bjdTest(@RequestParam(name="sgg", required = false, defaultValue = "" ) String sgg) {
       
+      List<Map<String, Object>> bjdlist = servletService.bjdlist(sgg); 
       
-      List<Map<String, Object>> bjdlist = servletService.bjdlist(sgg);
+      Map<String, Object> geom = servletService.selectB(sgg);
+      
+      Map<String,Object> map = new HashMap<String, Object>();
+      map.put("bjdlist", bjdlist);
+      map.put("geom", geom);
+      
       System.out.println(sgg);
       System.out.println("bjd 통과");
       System.out.println(bjdlist);
-      return bjdlist;
+      System.out.println(geom);
+      return map;
    }
    
 	
-	@PostMapping("/selectSgg.do")
-	public Map<String, Object> selectSgg(@RequestParam("test") String name) {
-		List<SggDTO> list = servletService.selectSgg(name);
-	    
-		Map<String, Object> geom = servletService.selectGeom(name);
-	     
-	    Map<String,Object> map = new HashMap<String, Object>();
-	      
-	      map.put("list", list);
-	      map.put("geom", geom);
-	      
-	      System.out.println(map);
-	      
-	      return map;
-	   }
-	@PostMapping( "/selectB.do")
-	public Map<String, Object> selectB(@RequestParam("test") String name) {
-		Map<String, Object> geom = servletService.selectB(name);
-	      
-	      return geom;
-	   }
-	
+//	@PostMapping("/selectSgg.do")
+//	public Map<String, Object> selectSgg(@RequestParam("test") String name) {
+//		List<SggDTO> list = servletService.selectSgg(name);
+//	    
+//		Map<String, Object> geom = servletService.selectGeom(name);
+//	     
+//	    Map<String,Object> map = new HashMap<String, Object>();
+//	      
+//	      map.put("list", list);
+//	      map.put("geom", geom);
+//	      
+//	      System.out.println(map);
+//	      
+//	      return map;
+//	   }
    
+	@PostMapping( "/selectB.do")
+	public Map<String, Object> selectB(@RequestParam("test") String name) {		
+		
+		Map<String, Object> geom = servletService.selectB(name);      
+      return geom;	  
+      }
+	
+    @RequestMapping(value="/test.do")
+    public String testPage() {
+        return "main/test"; // test.jsp 파일을 찾아서 반환합니다.
+    }
 }
+
+
+	
