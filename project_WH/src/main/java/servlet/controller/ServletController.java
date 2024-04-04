@@ -63,39 +63,21 @@ public class ServletController {
       Map<String, Object> geom = servletService.selectB(sgg);
       
       Map<String,Object> map = new HashMap<String, Object>();
-      map.put("bjdlist", bjdlist);
-      map.put("geom", geom);
+      map.put("bjdlist", bjdlist); 
+      map.put("geom", geom); 
       
       System.out.println(sgg);
       System.out.println("bjd 통과");
-      System.out.println(bjdlist);
-      System.out.println(geom);
       return map;
    }
    
-	
-//	@PostMapping("/selectSgg.do")
-//	public Map<String, Object> selectSgg(@RequestParam("test") String name) {
-//		List<SggDTO> list = servletService.selectSgg(name);
-//	    
-//		Map<String, Object> geom = servletService.selectGeom(name);
-//	     
-//	    Map<String,Object> map = new HashMap<String, Object>();
-//	      
-//	      map.put("list", list);
-//	      map.put("geom", geom);
-//	      
-//	      System.out.println(map);
-//	      
-//	      return map;
-//	   }
-   
-	@PostMapping( "/selectB.do")
-	public Map<String, Object> selectB(@RequestParam("test") String name) {		
-		
-		Map<String, Object> geom = servletService.selectB(name);      
-      return geom;	  
-      }
+   @RequestMapping(value = "/legend.do", method = RequestMethod.POST)
+   @ResponseBody
+   public Map<String, Object> legend(@RequestParam("legend") String legend) {
+       Map<String, Object> response = new HashMap<>();
+       System.out.println("재희 출력 화면" + response);
+       return response;
+   }
 	
     @RequestMapping(value="/test.do")
     public String testPage() {

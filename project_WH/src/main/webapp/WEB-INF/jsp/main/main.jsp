@@ -84,7 +84,7 @@
 		}); 
 	   
 	   
-	   
+	   				let sgg; 
                   $('#sidoSelect').change(function() {
                                  var sidoSelectedValue = $(this).val();
                                  var sidoSelectedText = $(this).find('option:selected').text();
@@ -167,7 +167,8 @@
 				                          //console.log(response);
 				                         // console.log(response.sgglist);
 				                          
-				                          var sgg = response.sgglist;
+				                     
+				                          sgg = response.sgglist;
 				                          var geom = response.geom;
 				                          map.getView().fit([geom.xmin, geom.ymin, geom.xmax, geom.ymax], {duation : 900});  
 				                       
@@ -186,7 +187,7 @@
 				                              let sgg2 = indexOfSpace !== -1 ? item.sgg_nm.substring(indexOfSpace + 1) : item.sgg_nm;
 				                                    console.log(sgg2);
 				                              
-				                              sggSelect.append("<option value='" + item.sgg_nm + "'>" + sgg2 + "</option>");
+				                              sggSelect.append("<option value='" +item.sgg_nm + "'>" + sgg2 + "</option>");
 				                                })
 				                         },
 				                          error: function(xhr, status, error) {
@@ -196,14 +197,22 @@
 				                          }
 				                     });
 				                  });
-
+                  
+				 let sggSelectedValue;
+				 let s_cd;
                   $('#sggSelect').change(function() {
                                 
-                	  var sggSelectedValue = $(this).val(); // sggSelect.append("<option value='" + item.sgg_nm + "'>" + sgg2 + "</option>");의 value 값을 sggSelectedValue에 담는다
-                        
+                	  sggSelectedValue = $(this).val(); // sggSelect.append("<option value='" + item.sgg_nm + "'>" + sgg2 + "</option>");의 value 값을 sggSelectedValue에 담는다
+                  	 
                                  if(sggSelectedValue) {
                                     var sggSelectedText = $(this).find('option:selected').text();
                                     updateAddress(null, sggSelectedText, null); //상단 시/군/구 노출
+                                    
+                                    sgg.forEach(function(map) {
+                                        if (map.sgg_nm === sggSelectedValue) {
+                                        	s_cd = map.sgg_cd;
+                                        }
+                                    });
                                  }
                                  
                                   $('#bjdSelect').empty().val(null).trigger('change');
@@ -225,7 +234,7 @@
                                                    params : {
                                                       'VERSION' : '1.1.0', // 2. 버전
                                                       'LAYERS' : 'cite:tlsgg', // 3. 작업공간:레이어 명
-                                                      'CQL_FILTER': cqlFilterSGG,
+                                                      'CQL_FILTER': cqlFilterSGG, 
                                                       'BBOX' : [ 1.386872E7,
                                                             3906626.5,
                                                             1.4428071E7,
@@ -247,14 +256,14 @@
                                           }, // 선택된 값 전송
                                           dataType : 'json',
                                           success : function(response) { //controller에서 return map이 response(변수명)랑 같은 거임
-                                             //alert(response);
+                                          
   											console.log(response.bjdlist);
-                                             //var bjd = JSON.parse(response);
+                                           
                                            
                                              var bjd = response.bjdlist;
                                              var geom = response.geom;
                                               
-                                              map.getView().fit([geom.xmin, geom.ymin, geom.xmax, geom.ymax], { duration: 900 });
+                                             map.getView().fit([geom.xmin, geom.ymin, geom.xmax, geom.ymax], { duration: 900 }); 
                                    				//alert(geom);
                                              var bjdSelect = $("#bjdSelect");
                                              bjdSelect.html("<option>--동/읍/면를 선택하세요--</option>");
@@ -336,7 +345,53 @@
                               zoom : 7
                            })
                         });
+                  
+                  $('#legendSelect').change(function() {
+                	    var legend = $("#legendSelect").val();
+                	    
+                	    map.removeLayer(sdLayer);
+                        map.removeLayer(sggLayer);
+                        map.removeLayer(bjdLayer); 
 
+                	    var style = (legend === "1") ? 'totalusagedgg' : 'totalusagenature';
+
+                	    alert((legend === "1") ? "등간격 스타일을 적용합니다." : "네추럴 브레이크 스타일을 적용합니다.");
+                	    $.ajax({
+                	        url: "/legend.do",
+                	        type: 'POST',
+                	        dataType: "json",
+                	        data: {
+                	            "legend": legend
+                	        },
+                	        success: function(result) {
+                	        	alert("scd 코드"+s_cd );
+                	        
+                	            var bjd_CQL = "sgg_cd='" + s_cd + "'";
+                	            var bjdSource = new ol.source.TileWMS({
+                	                url: 'http://localhost:8080/geoserver/cite/wms?service=WMS',
+                	                params: {
+                	                    'VERSION': '1.1.0',
+                	                    'LAYERS': 'cite:e2bjdview',
+                	                    'CQL_FILTER': bjd_CQL,
+                	                    'BBOX': [1.3873946E7, 3926728.0, 1.4411295E7, 4612208.0],
+                	                    'SRS': 'EPSG:3857',
+                	                    'FORMAT': 'image/png',
+                	                    'TRANSPARENT': 'TRUE',
+                	                    'STYLES': style,
+                	                },
+                	                serverType: 'geoserver',
+                	            });
+                	            bjd = new ol.layer.Tile({
+                	                source: bjdSource,
+                	                opacity: 0.5
+                	            });
+                	            map.addLayer(bjd);
+                	        },
+                	        error: function() {
+                	            alert("실패");
+                	        }
+                	    });
+                	});
                });
 
 </script>
@@ -380,9 +435,10 @@
 <body>
    <div>
 		<div class="toolBar">
-         <h1>메뉴</h1>
+         <h1>탄소공간지도</h1>
          <div class="selectBar">
-            <select id="sidoSelect">
+                
+           <select id="sidoSelect">
                <option>--시/도를 선택하세요--</option>
                <c:forEach items="${sdlist}" var="sido">
                   <option value="${sido.sd_cd}">${sido.sd_nm}</option>
@@ -399,6 +455,13 @@
                <option>--동/읍/면을 선택하세요--</option>
             </select>
             
+               
+          <select id="legendSelect">
+                    <option value="default">범례 선택</option>
+                    <option value="1">등간격</option>
+                    <option value="2">네추럴 브레이크</option>
+          </select>
+                
           <div>
           <form id="form" enctype="multipart/form-data">
 			<input type="file" id="file" name="file" accept="txt">
@@ -410,7 +473,7 @@
 
       <div>
         <div id="address" class="address">
-            <h1>주소창</h1>
+            <h1>주소 표시창</h1>
         </div>
        <div id="map" class="map">
        </div>
