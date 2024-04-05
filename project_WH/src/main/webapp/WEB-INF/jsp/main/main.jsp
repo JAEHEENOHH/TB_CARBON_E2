@@ -22,6 +22,9 @@
    var sdLayer;
    var sggLayer;
    var bjdLayer;
+   let sggBjdFlag;
+   let ldLayer;
+   var style;
 
    $(document).ready(function() {
 	   
@@ -146,6 +149,9 @@
 
                                    map.addLayer(sggLayer); // 맵 객체에 레이어를 추가함
                                    
+                                   
+                               
+                              
                                 $('#sggSelect, #bjdSelect').empty().val(null).trigger('change');
                                  // bjdSelect를 초기화
                                  //var bjdSelect = $("#bjdSelect");
@@ -155,6 +161,8 @@
                                  //bjdSelect.html("<option>--동/읍/면를 선택하세요--</option>");
 								//alert(sidoSelectedValue);
 								console.log(sidoSelectedText);
+								
+								sggBjdFlag = "sgg";
                   
 				               // AJAX 요청 보내기
 				                  $.ajax({
@@ -287,6 +295,8 @@
                      var bjdSelectedText = $(this).find('option:selected').text();
                      updateAddress(null, null, bjdSelectedText); //상단 법정동 노출
                      
+                     sggBjdFalg = "bjd";
+                     
                      var cqlFilterBJD = "bjd_cd='" + bjdSelectedValue + "'";
                      
                      if(bjdLayer) {
@@ -344,7 +354,9 @@
                               center : ol.proj.fromLonLat([ 128.4, 35.7 ]),
                               zoom : 7
                            })
+                  
                         });
+                  
                   
                   $('#legendSelect').change(function() {
                 	    var legend = $("#legendSelect").val();
@@ -353,7 +365,7 @@
                         map.removeLayer(sggLayer);
                         map.removeLayer(bjdLayer); 
 
-                	    var style = (legend === "1") ? 'totalusagedgg' : 'totalusagenature';
+                	    style = (legend === "1") ? 'totalusagedgg' : 'totalusagenature';
 
                 	    alert((legend === "1") ? "등간격 스타일을 적용합니다." : "네추럴 브레이크 스타일을 적용합니다.");
                 	    $.ajax({
@@ -381,21 +393,331 @@
                 	                },
                 	                serverType: 'geoserver',
                 	            });
-                	            bjd = new ol.layer.Tile({
+                	            
+                	            ldLayer = new ol.layer.Tile({
                 	                source: bjdSource,
                 	                opacity: 0.5
                 	            });
-                	            map.addLayer(bjd);
+                	            map.addLayer(ldLayer);
+	                	      	ldjaehee(style);
                 	        },
                 	        error: function() {
                 	            alert("실패");
                 	        }
+                
                 	    });
                 	});
+                  
+                  // 팝업 오버레이 생성
+                  var overlay = new ol.Overlay({
+                    element: document.getElementById('popup'), // 팝업의 HTML 요소
+                    positioning: 'bottom-center', // 팝업을 마커 아래 중앙에 위치시킴
+                    offset: [0, -20], // 팝업을 마커 아래로 조정
+                    autoPan: true // 팝업이 지도 영역을 벗어날 경우 자동으로 팝업 위치를 조정하여 보여줌
+                  });
+                  map.addOverlay(overlay);
+
+                  // 팝업 닫기 버튼 요소 가져오기
+                  var popupCloser = document.getElementById('popup-closer');
+
+                  // 클릭 이벤트 리스너 설정
+                  map.on('singleclick', function(evt) {
+                    // 클릭한 지점의 좌표를 가져옴
+                    var coordinate = evt.coordinate;
+                    
+                    if (sggBjdFlag == 'sgg') {
+                        // 해당 좌표에서의 지리적 정보를 가져오는 요청을 서버에 보냄
+                        var featureRequest = new ol.format.WFS().writeGetFeature({
+                          srsName: 'EPSG:3857',
+                          featureNS: 'http://localhost:8080/geoserver/cite',
+                          featurePrefix: 'cite',
+                          featureTypes: ['e2bjdview'],
+                          outputFormat: 'application/json',
+                          geometryName: 'geom',
+                          filter: new ol.format.filter.Intersects('geom', new ol.geom.Point(coordinate))
+                        });             
+                    
+                    } else if (sggBjdFlag == 'bjd'){
+                    	// 해당 좌표에서의 지리적 정보를 가져오는 요청을 서버에 보냄
+                    	var featureRequest = new ol.format.WFS().writeGetFeature({
+                    	    srsName: 'EPSG:3857',
+                    	    featureNS: 'http://localhost:8080/geoserver/cite',
+                    	    featurePrefix: 'cite',
+                    	    featureTypes: ['e2bjdview'],
+                    	    outputFormat: 'application/json',
+                    	    geometryName: 'geom',
+                    	    filter: new ol.format.filter.Intersects('geom', new ol.geom.Point(coordinate))
+                    	});             
+                    }
+
+                    // 서버에 요청 보내기
+                    fetch('http://localhost:8080/geoserver/cite/wfs', {
+                      method: 'POST',
+                      body: new XMLSerializer().serializeToString(featureRequest)
+                    })
+                    .then(function(response) {
+                    	let res = response.json();
+                    	console.log(res);
+                      return res;
+                    })
+                    .then(function(json) {
+                      // 가져온 정보에서 단계 구분 값을 추출하여 팝업에 표시
+                      if (json.features.length > 0) {
+                        var properties = json.features[0].properties;
+                        var sgg_pu = properties['sgg_pu']; // 예시: 구분 값의 키가 'sgg_cd'라 가정
+                        var sgg_cd = properties['adm_sect_c']; 
+                        var sgg_nm = properties['sgg_nm']; 
+                        var totalusage = properties['totalusage'];
+                        let bjd_nm = properties['bjd_nm'];
+                        let bjd_cd = properties['bjd_cd'];
+                        
+                        // 팝업 내용을 구성
+                        var popupContent;
+                          popupContent = 
+                             '<p>' + bjd_nm + '</p>'
+                             + '<p>전력 사용량 : ' + totalusage.toLocaleString() + ' kWh' + '</p>';
+                             
+                           // 팝업 내용 설정
+                           document.getElementById('popup-content').innerHTML = popupContent;
+                           
+                           // 팝업 위치 설정 및 보이기
+                           overlay.setPosition(coordinate);
+                        
+                      } else {
+                        alert('클릭한 지점에 대한 정보를 찾을 수 없습니다.');
+                      }
+                    });
+                  });
+
+                  // 팝업 닫기 버튼에 이벤트 리스너 추가
+                  popupCloser.onclick = function() {
+                    overlay.setPosition(undefined); // 팝업을 지도에서 제거
+                    return false; // 이벤트 전파 방지
+                  };
                });
+   
+   let legendSelected = 'nb';
+	function ldjaehee(style) {
+  		console.log(ldLayer);
+         // sggLayer의 소스에 접근하여 파라미터 수정
+         let source = ldLayer.getSource();
+         let params = source.getParams();
+         
+         //범례 재구성
+         fetchLegendInfo(style);        
+   }
+
+
+	function fetchLegendInfo(styleName) {
+  // GeoServer의 REST API 엔드포인트 설정
+ 	const baseUrl = 'http://localhost:8080/geoserver';
+  	const styleEndpoint = `${"${baseUrl}"}/rest/styles/${"${styleName}"}.sld`;
+
+  // Ajax를 사용하여 범례 정보 가져오기
+  $.ajax({
+      url: styleEndpoint,
+      dataType: 'xml',
+      success: function(response) {
+         
+          // Ajax 요청이 성공했을 때 처리할 코드
+          // 반환된 JSON 데이터에서 범례 정보 추출 및 처리
+          let breakValues = extractRuleNames(response);
+          console.log('Break Values:', breakValues);
+          updateLegend(breakValues);
+
+          // 여기서 범례 이미지 URL을 사용하여 이미지를 화면에 표시하거나 추가적인 처리를 할 수 있습니다.
+      },
+      error: function(xhr, status, error) {
+          // Ajax 요청이 실패했을 때 처리할 코드
+          console.error('Error:', error);
+      }
+  });
+}
+
+function extractRuleNames(sldXml) {
+  const ruleNames = [];
+
+  // SLD XML을 jQuery 객체로 변환
+  const $xml = $(sldXml);
+
+  // 각 분류(Classification) 요소를 찾아 반복
+  $xml.find('sld\\:FeatureTypeStyle > sld\\:Rule').each(function() {
+      const $rule = $(this);
+
+      // Rule 내의 se:Name 요소의 텍스트 값을 추출하여 배열에 추가
+      const ruleName = $rule.find('sld\\:Name').text().trim();
+      console.log('rule : ' + ruleName);
+      ruleNames.push(ruleName);
+  });
+
+  return ruleNames;
+}
+
+function updateLegend(breakValues) {
+  const legendContainer = document.querySelector('.legend');
+
+  // 먼저 기존의 legend-item 요소를 모두 제거합니다.
+  const legendItems = document.querySelectorAll('.legend-item');
+  legendItems.forEach(item => item.remove());
+
+  // breakValues 배열을 순회하면서 legend-item을 생성하고 legendContainer에 추가합니다.
+  breakValues.forEach((value, index) => {
+      const legendItem = document.createElement('div');
+      legendItem.classList.add('legend-item');
+
+      // 값을 "-" 기준으로 분리하여 숫자 부분만 추출합니다.
+      const [start, end] = value.split('-').map(Number);
+      
+      // 숫자를 locale string으로 변환하여 읽기 쉽게 만듭니다.
+      const formattedStart = start.toLocaleString();
+      const formattedEnd = end.toLocaleString();           
+      
+      // 연결된 문자열을 생성합니다.
+      const stringValue = `${"${formattedStart}"} ~ ${"${formattedEnd}"}`;           
+      
+      const colorSpan = document.createElement('span');
+      if(style == 'totalusagedgg'){
+    	  colorSpan.style.backgroundColor = getColorDgg(); // getColor 함수는 각 값에 해당하는 색상을 반환하는 것으로 가정합니다.
+      }else if(style == 'totalusagenature'){
+    	  colorSpan.style.backgroundColor = getColorNature(); // getColor 함수는 각 값에 해당하는 색상을 반환하는 것으로 가정합니다.
+      }
+    
+      const textNode = document.createTextNode(stringValue);
+      legendItem.appendChild(colorSpan);
+      legendItem.appendChild(textNode);
+      
+      legendContainer.appendChild(legendItem);
+  });
+  
+  // legend 클래스를 보이도록 변경
+  legendContainer.style.display = 'block';
+}
+
+let counter = 0; // getColor 함수 외부에서 선언하여 값이 유지되도록 수정
+function getColorNature() {
+  let color = '#ffffff'; // 기본값으로 흰색을 지정
+
+  // counter 변수를 사용하여 다른 색상을 반환
+  switch (counter) {
+      case 0:
+          color = '#ffffff'; // 흰색
+          break;
+      case 1:
+          color = '#ffbfbf'; // 연한 분홍색
+          break;
+      case 2:
+          color = '#ff8080'; // 분홍색
+          break;
+      case 3:
+          color = '#ff4040'; // 적색
+          break;
+      case 4:
+          color = '#ff0000'; // 빨간색
+          break;
+  }
+  
+  counter = (counter + 1) % 5; // 0부터 4까지 반복되도록 설정
+
+  return color;
+
+
+  // counter 값을 증가시킴
+ 
+} 
+function getColorDgg() {
+	  let color = '#ffffff'; // 기본값으로 흰색을 지정
+
+	  // counter 변수를 사용하여 다른 색상을 반환
+	  switch (counter) {
+	      case 0:
+	          color = '#ffffff'; // 흰색
+	          break;
+	      case 1:
+	          color = '##fff9ce'; // 연한 노랑색
+	          break;
+	      case 2:
+	          color = '##fff39c'; // 노랑색
+	          break;
+	      case 3:
+	          color = '#ffee6a'; // 진한 노랑색
+	          break;
+	      case 4:
+	          color = '#ffe839'; // 엄청 진한 노랑색
+	          break;
+	  }
+	  counter = (counter + 1) % 5; // 0부터 4까지 반복되도록 설정
+
+	  return color;
+}
 
 </script>
 <style type="text/css">
+
+   /* 범례 스타일 */
+   .legend {
+     background-color: rgba(255, 255, 255, 0.8);
+     border: 1px solid #ccc;
+     border-radius: 5px;
+     padding: 10px;
+     position: absolute;
+     bottom: 20px;
+     right: 20px;
+     z-index: 1000;
+     display: none;
+   }
+   
+   .legend-title {
+     font-weight: bold;
+     margin-bottom: 5px;
+   }
+   
+   .legend-item {
+     margin-bottom: 5px;
+   }
+   
+   .legend-item span {
+     display: inline-block;
+     width: 20px;
+     height: 10px;
+     margin-right: 5px;
+   }  
+
+  /* 폰트 스타일 */
+  body {
+    font-family: 'Arial', sans-serif; /* 여기에 사용할 원하는 폰트 이름을 넣어주세요 */
+  }
+  
+  /* 팝업 스타일 */
+  .popup {
+    position: relative;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    width: 250px; /* 가로폭 조정 */
+    font-size: 16px;
+    color: #333; /* 폰트 색상 */
+    line-height: 1.5; /* 줄간격 조정 */
+    font-weight: bold; /* 폰트 굵기 */
+  }
+
+  /* 팝업 닫기 버튼 스타일 */
+  .popup-closer {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 20px; /* X 아이콘 크기 */
+    color: #888; /* X 아이콘 색상 */
+    text-decoration: none;
+    transition: color 0.3s ease;
+    font-weight: bold; /* 폰트 굵기 */
+    line-height: 1; /* 세로 정렬 */
+  }
+
+  .popup-closer:hover {
+    color: #555; /* 호버 시 색상 변경 */
+  }
+  
 .toolBar {
    height: 900px;
    width: 15%;
@@ -433,6 +755,28 @@
 </style>
 </head>
 <body>
+
+   <!-- 팝업을 나타내는 HTML 요소 -->
+   <div id="popup" class="popup">
+     <a href="#" id="popup-closer" class="popup-closer">&times;</a>
+     <div id="popup-content"></div>
+   </div>
+   
+      <!-- 범례 요소 -->
+   <div class="legend">
+     <div class="legend-title">전력 사용량 범례 (단위 kWh)</div>
+     
+     <div class="legend-item">
+       <span style="background-color: #ff0000;"></span> 0 - 100
+     </div>
+     <div class="legend-item">
+       <span style="background-color: #ffcc00;"></span> 101 - 200
+     </div>
+     <div class="legend-item">
+       <span style="background-color: #00ff00;"></span> 201 - 300
+     </div>
+   </div>   
+   
    <div>
 		<div class="toolBar">
          <h1>탄소공간지도</h1>
@@ -456,7 +800,7 @@
             </select>
             
                
-          <select id="legendSelect">
+          <select id="legendSelect" name="legendSelect">
                     <option value="default">범례 선택</option>
                     <option value="1">등간격</option>
                     <option value="2">네추럴 브레이크</option>
