@@ -784,7 +784,7 @@ function getColorDgg() {
                 
            <select id="sidoSelect">
                <option>--시/도를 선택하세요--</option>
-               <c:forEach items="${sdlist}" var="sido">
+               <c:forEach items="${sdlist}" var="sido"> <!-- Controller.java에서 model에서 보내서 씀 -->
                   <option value="${sido.sd_cd}">${sido.sd_nm}</option>
                </c:forEach>
             </select>
